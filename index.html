@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAR vs R-99 · 三档护甲数据表（可编辑）</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#171a21; --line:#262b36; --txt:#e6e9ef; --dim:#8b93a3;
+    --car:#ff6b4a; --r99:#4a8cff; --win:#2ecc71; --lose:#e74c3c; --tie:#7f8c9b;
+    --head:#1f2430; --edit:#f0b429;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:0 20px 100px;
+    background:var(--bg); color:var(--txt);
+    font-family:"Segoe UI","Microsoft YaHei",-apple-system,sans-serif;
+    line-height:1.6; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1100px;margin:0 auto}
+
+  /* ===== 工具条 ===== */
+  .toolbar{
+    position:sticky; top:0; z-index:100;
+    display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+    background:rgba(15,17,21,.94); backdrop-filter:blur(10px);
+    padding:12px 0; margin-bottom:8px;
+    border-bottom:1px solid var(--line);
+  }
+  .toolbar .spacer{flex:1}
+  button{
+    font-family:inherit; font-size:13px; cursor:pointer;
+    padding:7px 15px; border-radius:7px;
+    border:1px solid var(--line); background:var(--head); color:var(--txt);
+    transition:all .15s;
+  }
+  button:hover{background:#2a3040; border-color:#3a4252}
+  button.primary{background:#1d4ed8;border-color:#2563eb}
+  button.primary:hover{background:#2563eb}
+  button.on{background:var(--edit);border-color:var(--edit);color:#1a1a1a;font-weight:600}
+  button.danger{border-color:#7f2d2d;color:#ff8f7a}
+  button.danger:hover{background:#3a1f1f}
+  .status{font-size:12px;color:var(--dim);margin-left:4px;min-width:120px}
+
+  /* ===== 标题 ===== */
+  h1{font-size:26px;margin:14px 0 6px;letter-spacing:.5px}
+  .sub{color:var(--dim);font-size:13px;margin-bottom:6px}
+  .sub code{background:var(--head);padding:2px 6px;border-radius:4px;font-size:12px}
+  h2{
+    font-size:17px;margin:38px 0 12px;padding-left:11px;
+    border-left:4px solid var(--car);letter-spacing:.3px;
+    outline:none;
+  }
+  h2 .tag{font-size:11px;color:var(--dim);font-weight:400;margin-left:8px}
+
+  /* ===== 表格 ===== */
+  .tscroll{overflow-x:auto; -webkit-overflow-scrolling:touch;
+           border-radius:8px; margin-bottom:8px;
+           scrollbar-width:thin; scrollbar-color:#3a4252 transparent;}
+  .tscroll::-webkit-scrollbar{height:8px}
+  .tscroll::-webkit-scrollbar-thumb{background:#3a4252;border-radius:4px}
+  .tscroll::-webkit-scrollbar-track{background:transparent}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--card);
+        border-radius:8px;overflow:hidden;margin-bottom:0;min-width:560px}
+  th,td{padding:9px 11px;text-align:left;border-bottom:1px solid var(--line)}
+  th{background:var(--head);font-weight:600;font-size:12.5px;color:#b9c1d1;
+     white-space:nowrap}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:#1c2029}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:Consolas,monospace}
+  th.num{text-align:right}
+  .car{color:var(--car);font-weight:600}
+  .r99{color:var(--r99);font-weight:600}
+  .good{color:var(--win);font-weight:600}
+  .bad{color:var(--lose)}
+  .tie{color:var(--tie)}
+  .note{font-size:12.5px;color:var(--dim);margin:8px 0 0;padding-left:2px;outline:none}
+  .note strong{color:#c9d1e0}
+  .warn{
+    background:linear-gradient(90deg,rgba(231,76,60,.14),rgba(231,76,60,0));
+    border-left:3px solid var(--lose);padding:11px 14px;border-radius:0 6px 6px 0;
+    font-size:13px;margin:14px 0;outline:none;
+  }
+  .warn b{color:#ff8f7a}
+  .formula{background:var(--head);border-radius:6px;padding:10px 14px;margin:10px 0;
+           font-family:Consolas,monospace;font-size:13px;color:#c8d3e6;
+           overflow-x:auto;outline:none;white-space:pre-wrap}
+  .footer{margin-top:52px;padding-top:18px;border-top:1px solid var(--line);
+          font-size:12px;color:var(--dim);line-height:1.9;outline:none}
+
+  /* ===== 编辑态 ===== */
+  body.editing [contenteditable="true"]{
+    background:rgba(240,180,41,.13);
+    box-shadow:inset 0 0 0 1px rgba(240,180,41,.4);
+    border-radius:4px;
+  }
+  body.editing [contenteditable="true"]:focus{
+    background:rgba(240,180,41,.2);
+    box-shadow:inset 0 0 0 2px var(--edit);
+    outline:none;
+  }
+  @media (max-width:760px){
+    body{padding:0 14px 90px}
+    h1{font-size:21px}
+    h2{font-size:15.5px}
+    table{font-size:12.5px;min-width:520px}
+    th,td{padding:7px 9px}
+    .toolbar{gap:6px}
+    button{padding:6px 11px;font-size:12px}
+  }
+  body.editing td,body.editing th{outline:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ================= 工具条 ================= -->
+<div class="toolbar">
+  <button id="btnEdit" class="primary">✏️ 开启编辑</button>
+  <button id="btnCsv">⬇️ 导出 CSV</button>
+  <button id="btnPrint">🖨️ 打印 / PDF</button>
+  <span class="spacer"></span>
+  <span class="status" id="status">只读模式</span>
+  <button id="btnReset" class="danger">↺ 还原原始数据</button>
+</div>
+
+<h1 contenteditable="false">CAR vs R-99 · 三档护甲数据表</h1>
+<div class="sub" contenteditable="false">
+  数据源：Apex Weapons Lab（白 150 / 蓝 175 / 紫 200）　·　换算：1 hu = 0.0254 m　·　
+  <code>TTK = (n−1) × 60 / RPM</code>
+</div>
+
+<!-- ================= 1 ================= -->
+<h2 contenteditable="false">1 · 固定属性 <span class="tag">与护甲无关</span></h2>
+<div class="tscroll"><table>
+  <thead>
+    <tr>
+      <th>分类</th><th>项目</th>
+      <th class="num">C.A.R</th><th class="num">R-99</th>
+      <th class="num">差值</th><th>优势</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>战斗</td><td>单发伤害</td><td class="num car">14</td><td class="num r99">12</td><td class="num">+2</td><td class="good">CAR</td></tr>
+    <tr><td>战斗</td><td>爆头伤害</td><td class="num car">18</td><td class="num r99">15</td><td class="num">+3</td><td class="good">CAR</td></tr>
+    <tr><td>战斗</td><td>头部倍率（配置值）</td><td class="num car">1.25×</td><td class="num r99">1.25×</td><td class="num">0</td><td class="tie">相同</td></tr>
+    <tr><td>战斗</td><td>射速</td><td class="num car">930 RPM</td><td class="num r99">1080 RPM</td><td class="num">+150</td><td class="good">R-99</td></tr>
+    <tr><td>战斗</td><td>射击间隔</td><td class="num">64.52 ms</td><td class="num good">55.56 ms</td><td class="num">−8.96 ms</td><td class="good">R-99</td></tr>
+    <tr><td>战斗</td><td>DPS</td><td class="num">217</td><td class="num">216</td><td class="num">+1</td><td class="tie">持平（0.5%）</td></tr>
+    <tr><td>容错</td><td>弹匣（紫）</td><td class="num good">30</td><td class="num">27</td><td class="num">+3</td><td class="good">CAR</td></tr>
+    <tr><td>容错</td><td>弹匣总伤</td><td class="num good">420</td><td class="num">324</td><td class="num">+96</td><td class="good">CAR</td></tr>
+    <tr><td>容错</td><td>容错率（紫甲基准）</td><td class="num good">50%</td><td class="num">37%</td><td class="num">+13 pt</td><td class="good">CAR</td></tr>
+    <tr><td>容错</td><td>TTM（紫甲基准）</td><td class="num good">0.97 s</td><td class="num">0.56 s</td><td class="num">+0.41 s</td><td class="good">CAR</td></tr>
+    <tr><td>操控</td><td>空仓换弹</td><td class="num good">1.90 s</td><td class="num">2.20 s</td><td class="num">−0.30 s</td><td class="good">CAR</td></tr>
+    <tr><td>操控</td><td>战术换弹</td><td class="num good">1.53 s</td><td class="num">1.62 s</td><td class="num">−0.09 s</td><td class="good">CAR</td></tr>
+    <tr><td>操控</td><td>跑速</td><td class="num">87%</td><td class="num">87%</td><td class="num">0</td><td class="tie">相同</td></tr>
+    <tr><td>操控</td><td>腰射移速</td><td class="num">58%</td><td class="num">58%</td><td class="num">0</td><td class="tie">相同</td></tr>
+    <tr><td>操控</td><td>开镜移速</td><td class="num">44%</td><td class="num">44%</td><td class="num">0</td><td class="tie">相同</td></tr>
+    <tr><td>操控</td><td>后坐力控制</td><td class="num good">32</td><td class="num">20</td><td class="num">+12</td><td class="good">CAR</td></tr>
+    <tr><td>操控</td><td>腰射精准</td><td class="num good">86</td><td class="num">79</td><td class="num">+7</td><td class="good">CAR</td></tr>
+    <tr><td>操控</td><td>武器操控</td><td class="num">84</td><td class="num good">85</td><td class="num">−1</td><td class="good">R-99</td></tr>
+    <tr><td>操控时间</td><td>掏枪</td><td class="num">0.30 s</td><td class="num good">0.26 s</td><td class="num">−0.04 s</td><td class="good">R-99</td></tr>
+    <tr><td>操控时间</td><td>收枪</td><td class="num">0.22 s</td><td class="num">0.22 s</td><td class="num">0</td><td class="tie">相同</td></tr>
+    <tr><td>操控时间</td><td>冲刺后举枪</td><td class="num">0.24 s</td><td class="num">0.24 s</td><td class="num">0</td><td class="tie">相同</td></tr>
+    <tr><td>操控时间</td><td>开镜时间</td><td class="num good">0.15 s</td><td class="num">0.17 s</td><td class="num">−0.02 s</td><td class="good">CAR</td></tr>
+  </tbody>
+</table></div>
+<div class="note" contenteditable="false">
+  <strong>DPS 几乎相同（217 vs 216，差 0.5%）。</strong>
+  射速优势（+16.1%）被单发劣势（−16.7%）完全抵消 —— 两把枪的单位时间输出能力一样，
+  所有体验差异都来自「伤害怎么分配」，不来自「总量」。
+</div>
+
+<!-- ================= 2 ================= -->
+<h2 contenteditable="false">2 · 随护甲变化项 <span class="tag">核心</span></h2>
+<div class="tscroll"><table>
+  <thead>
+    <tr>
+      <th>项目</th>
+      <th class="num">白甲 150</th><th class="num">蓝甲 175</th><th class="num">紫甲 200</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>CAR TTK</td><td class="num good">0.65 s</td><td class="num good">0.77 s</td><td class="num">0.90 s</td></tr>
+    <tr><td>R-99 TTK</td><td class="num">0.67 s</td><td class="num">0.78 s</td><td class="num good">0.89 s</td></tr>
+    <tr><td>CAR 击杀子弹数</td><td class="num car">11</td><td class="num car">13</td><td class="num car">15</td></tr>
+    <tr><td>R-99 击杀子弹数</td><td class="num r99">13</td><td class="num r99">15</td><td class="num r99">17</td></tr>
+    <tr><td>子弹数差</td><td class="num">2</td><td class="num">2</td><td class="num">2</td></tr>
+    <tr><td>更快方</td><td class="good">CAR</td><td class="good">CAR</td><td class="good">R-99 ← 翻转</td></tr>
+    <tr><td>差距</td><td class="num">3.3%</td><td class="num">0.5%</td><td class="num">1.6%</td></tr>
+  </tbody>
+</table></div>
+<div class="warn" contenteditable="false">
+  <b>TTK 排名在紫甲档翻转。</b>
+  白甲 CAR 快 3.3%，蓝甲几乎持平（0.5%），紫甲 R-99 反超 1.6%。
+  原因不是平衡改动，而是取整函数：紫甲档 CAR 最后一发只 28.6% 有效，R-99 有 66.7%。
+</div>
+
+<!-- ================= 3 ================= -->
+<h2 contenteditable="false">3 · 派生数据：命中数与 TTK 复算 <span class="tag">含验证</span></h2>
+<div class="formula" contenteditable="false">n = ⌈HP / d_body⌉　　　TTK = (n − 1) × 60 / RPM</div>
+<div class="tscroll"><table>
+  <thead>
+    <tr>
+      <th>档位</th><th>武器</th>
+      <th class="num">使命中</th><th class="num">计算 TTK</th><th class="num">截图值</th><th>校验</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>白甲 150</td><td class="car">CAR</td><td class="num">11</td><td class="num">0.645 s</td><td class="num">0.65</td><td class="good">✅</td></tr>
+    <tr><td>白甲 150</td><td class="r99">R-99</td><td class="num">13</td><td class="num">0.667 s</td><td class="num">0.67</td><td class="good">✅</td></tr>
+    <tr><td>蓝甲 175</td><td class="car">CAR</td><td class="num">13</td><td class="num">0.774 s</td><td class="num">0.77</td><td class="good">✅</td></tr>
+    <tr><td>蓝甲 175</td><td class="r99">R-99</td><td class="num">15</td><td class="num">0.778 s</td><td class="num">0.78</td><td class="good">✅</td></tr>
+    <tr><td>紫甲 200</td><td class="car">CAR</td><td class="num">15</td><td class="num">0.903 s</td><td class="num">0.90</td><td class="good">✅</td></tr>
+    <tr><td>紫甲 200</td><td class="r99">R-99</td><td class="num">17</td><td class="num">0.889 s</td><td class="num">0.89</td><td class="good">✅</td></tr>
+    <tr><td>红甲 225</td><td class="car">CAR</td><td class="num">17</td><td class="num">1.032 s</td><td class="num">—</td><td class="tie">推算</td></tr>
+    <tr><td>红甲 225</td><td class="r99">R-99</td><td class="num">19</td><td class="num">1.000 s</td><td class="num">—</td><td class="tie">推算</td></tr>
+  </tbody>
+</table></div>
+<div class="note" contenteditable="false"><strong>六个值与截图全部吻合到小数点后两位，模型闭环。</strong></div>
+
+<!-- ================= 4 ================= -->
+<h2 contenteditable="false">4 · 溢出伤害 <span class="tag">翻转的物理解释</span></h2>
+<div class="formula" contenteditable="false">溢出 = n × d − HP　　　最后一发有效率 = (HP − (n−1)×d) / d</div>
+<div class="tscroll"><table>
+  <thead>
+    <tr>
+      <th rowspan="2">档位</th>
+      <th colspan="3" style="text-align:center;border-right:1px solid var(--line)">C.A.R（14 / 发）</th>
+      <th colspan="3" style="text-align:center">R-99（12 / 发）</th>
+    </tr>
+    <tr>
+      <th class="num">总伤</th><th class="num">溢出</th><th class="num" style="border-right:1px solid var(--line)">溢出率</th>
+      <th class="num">总伤</th><th class="num">溢出</th><th class="num">溢出率</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>白甲 150</td><td class="num">154</td><td class="num">4</td><td class="num good" style="border-right:1px solid var(--line)">2.7%</td><td class="num">156</td><td class="num">6</td><td class="num">4.0%</td></tr>
+    <tr><td>蓝甲 175</td><td class="num">182</td><td class="num">7</td><td class="num" style="border-right:1px solid var(--line)">4.0%</td><td class="num">180</td><td class="num">5</td><td class="num good">2.9%</td></tr>
+    <tr><td>紫甲 200</td><td class="num">210</td><td class="num bad">10</td><td class="num bad" style="border-right:1px solid var(--line)">5.0%</td><td class="num">204</td><td class="num good">4</td><td class="num good">2.0%</td></tr>
+  </tbody>
+</table></div>
+<div class="note" contenteditable="false">
+  <strong>紫甲档最后一发的有效率：CAR 28.6%（14 点里 10 点白打）／R-99 66.7%（12 点里 4 点白打）。</strong><br>
+  那次 0.014 秒的反超，来自 CAR 最后一发子弹里有 71% 是浪费的。
+</div>
+
+<!-- ================= 5 ================= -->
+<h2 contenteditable="false">5 · 容错率与 TTM <span class="tag">三档修正值</span></h2>
+<div class="formula" contenteditable="false">容错率 = (n_mag − n_kill) / n_mag　　　TTM = (n_mag − n_kill) / (RPM / 60)</div>
+<div class="warn" contenteditable="false">
+  <b>⚠️ 口径提示：</b>App 在切换护甲档位时容错率与 TTM 保持不变（锁死在紫甲基准 50% / 0.97 s 与 37% / 0.56 s）。
+  但容错率必然是护甲的函数，下表为三档修正值。
+</div>
+<div class="tscroll"><table>
+  <thead>
+    <tr>
+      <th rowspan="2">档位</th>
+      <th class="num" colspan="2" style="text-align:center;border-right:1px solid var(--line)">容错率</th>
+      <th class="num" colspan="2" style="text-align:center;border-right:1px solid var(--line)">TTM</th>
+      <th class="num" rowspan="2">R-99 相对</th>
+    </tr>
+    <tr>
+      <th class="num">CAR</th><th class="num" style="border-right:1px solid var(--line)">R-99</th>
+      <th class="num">CAR</th><th class="num" style="border-right:1px solid var(--line)">R-99</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>白甲 150</td><td class="num good">63.3%</td><td class="num" style="border-right:1px solid var(--line)">51.9%</td><td class="num good">1.226 s</td><td class="num" style="border-right:1px solid var(--line)">0.778 s</td><td class="num">−36.5%</td></tr>
+    <tr><td>蓝甲 175</td><td class="num good">56.7%</td><td class="num" style="border-right:1px solid var(--line)">44.4%</td><td class="num good">1.097 s</td><td class="num" style="border-right:1px solid var(--line)">0.667 s</td><td class="num">−39.2%</td></tr>
+    <tr><td>紫甲 200</td><td class="num good">50.0%</td><td class="num" style="border-right:1px solid var(--line)">37.0%</td><td class="num good">0.968 s</td><td class="num" style="border-right:1px solid var(--line)">0.556 s</td><td class="num">−42.6%</td></tr>
+    <tr><td>红甲 225</td><td class="num good">43.3%</td><td class="num" style="border-right:1px solid var(--line)">29.6%</td><td class="num good">0.839 s</td><td class="num" style="border-right:1px solid var(--line)">0.444 s</td><td class="num bad">−47.1%</td></tr>
+  </tbody>
+</table></div>
+<div class="note" contenteditable="false">
+  <strong>差距随护甲递厚而扩大：</strong>容错率领先从 11.4 个百分点扩大到 13.7 个百分点，
+  TTM 相对优势从 −36.5% 扩大到 −47.1%。<br>
+  → 正确表述不是「CAR 容错 50%」，而是「护甲越厚，两把枪越不在同一档次」。
+</div>
+
+<!-- ================= 6 ================= -->
+<h2 contenteditable="false">6 · 单弹匣击杀数</h2>
+<div class="formula" contenteditable="false">击杀数 = (n_mag × d) / HP</div>
+<div class="tscroll"><table>
+  <thead>
+    <tr><th>档位</th><th class="num">CAR（420 总伤）</th><th class="num">R-99（324 总伤）</th><th>判读</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>白甲 150</td><td class="num good">2.80 人</td><td class="num">2.16 人</td><td>都够打第二个</td></tr>
+    <tr><td>蓝甲 175</td><td class="num good">2.40 人</td><td class="num">1.85 人</td><td>R-99 已打不动第二个</td></tr>
+    <tr><td>紫甲 200</td><td class="num good">2.10 人</td><td class="num bad">1.62 人</td><td class="bad">R-99 打不死第二人</td></tr>
+  </tbody>
+</table></div>
+<div class="note" contenteditable="false">
+  <strong>紫甲局 R-99 一个弹匣只能杀 1.62 人</strong> —— 这是它「必须配副武器」的量化依据，不是建议。
+</div>
+
+<!-- ================= 7 ================= -->
+<h2 contenteditable="false">7 · 爆头 TTK 与收益</h2>
+<div class="tscroll"><table>
+  <thead>
+    <tr>
+      <th rowspan="2">档位</th>
+      <th class="num" colspan="2" style="text-align:center;border-right:1px solid var(--line)">C.A.R（爆头 18）</th>
+      <th class="num" colspan="2" style="text-align:center">R-99（爆头 15）</th>
+    </tr>
+    <tr>
+      <th class="num">爆头 TTK</th><th class="num" style="border-right:1px solid var(--line)">收益</th>
+      <th class="num">爆头 TTK</th><th class="num">收益</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>白甲 150</td><td class="num">0.516 s（9 发）</td><td class="num" style="border-right:1px solid var(--line)">−20.0%</td><td class="num good">0.500 s（10 发）</td><td class="num good">−25.0%</td></tr>
+    <tr><td>蓝甲 175</td><td class="num good">0.581 s（10 发）</td><td class="num good" style="border-right:1px solid var(--line)">−24.9%</td><td class="num">0.611 s（12 发）</td><td class="num">−21.5%</td></tr>
+    <tr><td>紫甲 200</td><td class="num good">0.710 s（12 发）</td><td class="num good" style="border-right:1px solid var(--line)">−21.4%</td><td class="num">0.722 s（14 发）</td><td class="num">−18.8%</td></tr>
+  </tbody>
+</table></div>
+<div class="note" contenteditable="false">
+  <strong>收益在 19–25% 区间来回摆，没有稳定优势方。</strong>
+  这是取整的副产物，不构成差异化手段 —— 不要下「CAR 更适合爆头」的结论。
+</div>
+
+<!-- ================= 8 ================= -->
+<h2 contenteditable="false">8 · 翻转公式 <span class="tag">可推广</span></h2>
+<div class="formula" contenteditable="false">TTK_CAR / TTK_R99 = (64.52 / 55.56) × [(n_CAR − 1) / (n_R99 − 1)]
+                  = 1.1613 × 命中数比
+
+翻转阈值 = 1 / 1.1613 = 0.8611</div>
+<div class="tscroll"><table>
+  <thead>
+    <tr><th>档位</th><th class="num">命中数比</th><th class="num">× 1.1613</th><th>判定</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>白甲 150</td><td class="num">10/12 = 0.8333</td><td class="num">0.968</td><td class="car">CAR 快 3.2%</td></tr>
+    <tr><td>蓝甲 175</td><td class="num">12/14 = 0.8571</td><td class="num">0.995</td><td class="car">CAR 快 0.5%</td></tr>
+    <tr><td>紫甲 200</td><td class="num">14/16 = 0.8750</td><td class="num good">1.016</td><td class="r99">R-99 快 1.6%</td></tr>
+  </tbody>
+</table></div>
+<div class="note" contenteditable="false">
+  比值序列 <strong>0.833 → 0.857 → 0.875</strong>，在蓝甲与紫甲之间跨过 0.8611 → 排名翻转。<br>
+  <strong>推广律：命中数差固定为 2 时，分母越大相对优势越小 → 目标血量越高，高射速低伤害武器越占优。</strong>
+</div>
+
+<!-- ================= 9 ================= -->
+<h2 contenteditable="false">9 · 雷达图百分位</h2>
+<div class="tscroll"><table>
+  <thead>
+    <tr><th>轴</th><th class="num">C.A.R</th><th class="num">R-99</th><th>备注</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>击杀速度</td><td class="num">—</td><td class="num">89</td><td>仅紫甲图标注 R-99</td></tr>
+    <tr><td>腰射精准</td><td class="num good">86</td><td class="num">79</td><td></td></tr>
+    <tr><td>后坐力控制</td><td class="num" style="color:#e67e22">4</td><td class="num bad">0</td><td class="bad">两者都极低</td></tr>
+    <tr><td>开镜移速</td><td class="num">相同</td><td class="num">相同</td><td>44%</td></tr>
+    <tr><td>换弹</td><td class="num good">98</td><td class="num">87</td><td>CAR 最强项</td></tr>
+    <tr><td>DPS</td><td class="num good">95</td><td class="num">93</td><td></td></tr>
+    <tr><td>容错 TTM</td><td class="num">略低</td><td class="num">略低</td><td>两者都弱</td></tr>
+  </tbody>
+</table></div>
+<div class="warn" contenteditable="false">
+  <b>一处自相矛盾：</b>雷达图把 R-99 的「击杀速度」画得比 CAR 更靠外，
+  但数据明细写着 CAR 的 TTK（0.65 s）快于 R-99（0.67 s）。
+  说明该轴用的不是 TTK，而是射速或其他口径 —— <b>可视化必须标清口径</b>。
+</div>
+
+<!-- ================= 10 ================= -->
+<h2 contenteditable="false">10 · 数据缺口 <span class="tag">需自行补齐</span></h2>
+<div class="tscroll"><table>
+  <thead>
+    <tr><th>项</th><th>状态</th><th>来源建议</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>腿部伤害</td><td class="bad">缺</td><td>官方 Wiki</td></tr>
+    <tr><td>弹匣容量（白 / 蓝档）</td><td class="bad">缺</td><td>App 仅给紫弹匣 30 / 27</td></tr>
+    <tr><td>散布 spread 全系列</td><td class="bad">缺</td><td>官方 Wiki</td></tr>
+    <tr><td>弹速 projectile_launch_speed</td><td class="bad">缺</td><td>官方 Wiki</td></tr>
+    <tr><td>爆头失效距离 headshot_distance</td><td class="bad">缺</td><td>官方 Wiki</td></tr>
+    <tr><td>红甲档 TTK</td><td class="tie">已推算</td><td>见第 3 节</td></tr>
+    <tr><td>「后坐力控制 32」量纲</td><td class="bad">不明</td><td>百分位还是评分？需确认</td></tr>
+  </tbody>
+</table></div>
+
+<div class="footer" contenteditable="false">
+  <b>生成时间</b>：2026-11-20　·　<b>数据源</b>：Apex Weapons Lab（oldcucumber.github.io）三档截图
+  <br>
+  <b>标注说明</b>：
+  <span class="good">绿色</span> = 该行占优方　·　
+  <span class="bad">红色</span> = 明显劣势或异常　·　
+  <span class="tie">灰色</span> = 相同 / 推算值
+  <br>
+  <b>可信度</b>：【已验证】三档 TTK、击杀子弹数、单发/爆头伤害、射速、DPS、弹匣、紫甲容错率与 TTM（与截图精确吻合）　·　
+  【推算】三档容错率、三档 TTM、溢出伤害、爆头 TTK、爆头收益、翻转阈值、红甲档　·　
+  【App 口径问题】容错率 / TTM 不随护甲变化（已给出修正表）
+</div>
+
+</div>
+
+<script>
+(function(){
+  const KEY = 'car_vs_r99_edits_v1';
+  const statusEl = document.getElementById('status');
+  const btnEdit  = document.getElementById('btnEdit');
+  let editing = false;
+
+  // 1. 快照原始 HTML（用于还原）
+  const originalHTML = document.querySelector('.wrap').innerHTML;
+
+  // 2. 可编辑范围：标题、所有单元格、说明块、公式块、页脚
+  function collectEditable(){
+    const sel = [
+      'h1','h2','.sub','td','th','.note','.warn','.formula','.footer'
+    ].join(',');
+    return Array.from(document.querySelectorAll(sel));
+  }
+
+  // 3. 给每个可编辑元素分配稳定 ID（路径形式）
+  function buildPath(el){
+    const parts = [];
+    let node = el;
+    while(node && node !== document.querySelector('.wrap')){
+      const parent = node.parentNode;
+      const idx = Array.prototype.indexOf.call(parent.children, node);
+      parts.unshift(node.tagName + ':' + idx);
+      node = parent;
+    }
+    return parts.join('>');
+  }
+
+  const els = collectEditable();
+  els.forEach(el => { el.dataset.epath = buildPath(el); });
+
+  // 4. 读取 / 写入本地存储
+  function save(){
+    const data = {};
+    els.forEach(el => { data[el.dataset.epath] = el.innerHTML; });
+    try{
+      localStorage.setItem(KEY, JSON.stringify(data));
+      statusEl.textContent = '已保存 ' + new Date().toLocaleTimeString('zh-CN',{hour12:false});
+    }catch(e){
+      statusEl.textContent = '保存失败（存储已满）';
+    }
+  }
+
+  function load(){
+    let raw = null;
+    try{ raw = localStorage.getItem(KEY); }catch(e){}
+    if(!raw) return false;
+    let data;
+    try{ data = JSON.parse(raw); }catch(e){ return false; }
+    let count = 0;
+    els.forEach(el => {
+      const v = data[el.dataset.epath];
+      if(typeof v === 'string' && el.innerHTML !== v){ el.innerHTML = v; count++; }
+    });
+    if(count > 0){
+      statusEl.textContent = '已恢复 ' + count + ' 处修改';
+      return true;
+    }
+    return false;
+  }
+
+  // 5. 防抖保存
+  let timer = null;
+  function scheduleSave(){
+    clearTimeout(timer);
+    timer = setTimeout(save, 450);
+  }
+
+  // 6. 切换编辑态
+  function setEditing(on){
+    editing = on;
+    els.forEach(el => { el.contentEditable = on ? 'true' : 'false'; });
+    document.body.classList.toggle('editing', on);
+    btnEdit.textContent = on ? '✅ 完成编辑' : '✏️ 开启编辑';
+    btnEdit.classList.toggle('on', on);
+    btnEdit.classList.toggle('primary', !on);
+    statusEl.textContent = on ? '编辑中（自动保存）' : '只读模式';
+  }
+
+  btnEdit.addEventListener('click', () => setEditing(!editing));
+
+  // 7. 输入即保存
+  document.addEventListener('input', e => {
+    if(editing && e.target.closest('.wrap')) scheduleSave();
+  });
+
+  // 8. 还原
+  document.getElementById('btnReset').addEventListener('click', () => {
+    if(!confirm('确定还原全部数据？此操作会清除你所有的修改。')) return;
+    const wasEditing = editing;
+    setEditing(false);
+    document.querySelector('.wrap').innerHTML = originalHTML;
+    try{ localStorage.removeItem(KEY); }catch(e){}
+    location.reload();
+  });
+
+  // 9. 导出 CSV
+  document.getElementById('btnCsv').addEventListener('click', () => {
+    const lines = [];
+    document.querySelectorAll('table').forEach((table, ti) => {
+      // 表格可能被 .tscroll 包裹；标题前可能有公式/提示块，需回溯到最近的 h2
+      let node = table.parentElement && table.parentElement.classList.contains('tscroll')
+                 ? table.parentElement : table;
+      let titleEl = node.previousElementSibling;
+      let guard = 0;
+      while(titleEl && !/^H2$/.test(titleEl.tagName) && guard++ < 6){
+        titleEl = titleEl.previousElementSibling;
+      }
+      let title = '表' + (ti+1);
+      if(titleEl && /^H2$/.test(titleEl.tagName)) title = titleEl.textContent.trim();
+      lines.push('');
+      lines.push('### ' + title);
+      table.querySelectorAll('tr').forEach(tr => {
+        const cells = Array.from(tr.querySelectorAll('th,td')).map(c => {
+          let t = c.innerText.replace(/\s+/g,' ').trim();
+          return '"' + t.replace(/"/g,'""') + '"';
+        });
+        if(cells.length) lines.push(cells.join(','));
+      });
+    });
+    const blob = new Blob(['\uFEFF' + lines.join('\r\n')], {type:'text/csv;charset=utf-8'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'CAR_vs_R99_三档数据_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 3000);
+    statusEl.textContent = 'CSV 已导出';
+  });
+
+  // 10. 打印
+  document.getElementById('btnPrint').addEventListener('click', () => {
+    if(editing) setEditing(false);
+    setTimeout(()=>window.print(), 120);
+  });
+
+  // 启动时尝试恢复
+  load();
+
+  // 提示快捷键
+  window.addEventListener('keydown', e => {
+    if((e.ctrlKey||e.metaKey) && e.key === 's'){
+      e.preventDefault();
+      if(editing){ save(); } else { setEditing(true); }
+    }
+  });
+})();
+</script>
+</body>
+</html>
